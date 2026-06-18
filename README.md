@@ -16,13 +16,15 @@ Backend monolítico em TypeScript para gerenciamento de candidaturas, currículo
 
 1. Copie `.env.example` para `.env`.
 2. Ajuste `JWT_SECRET` e os caminhos de uploads, se quiser.
-3. Gere o client e aplique a migration:
+3. Gere o client e sincronize o schema:
 
 ```bash
 npm run prisma:generate
-npm run prisma:migrate
+npm run prisma:dbpush
 ```
-4. Instale dependências e rode o projeto:
+
+4. Se você estiver apontando para um banco vazio e quiser usar migrations, `npm run prisma:migrate` também está disponível.
+5. Instale dependências e rode o projeto:
 
 ```bash
 npm install

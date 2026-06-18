@@ -1,79 +1,51 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { createTestServer } from './helpers';
+import { api } from './helpers';
 
-async function registerAndLogin(baseUrl: string) {
-  await fetch(`${baseUrl}/auth/register`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      name: 'João',
-      email: 'joao@example.com',
-      password: 'password123',
-    }),
+async function registerAndLogin() {
+  await api.post('/auth/register').send({
+    name: 'João',
+    email: 'joao@example.com',
+    password: 'password123',
   });
 
-  const login = await fetch(`${baseUrl}/auth/login`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({
-      email: 'joao@example.com',
-      password: 'password123',
-    }),
+  const login = await api.post('/auth/login').send({
+    email: 'joao@example.com',
+    password: 'password123',
   });
 
-  const loginJson = await login.json();
-  return loginJson.data.token as string;
+  return login.body.data.token as string;
 }
 
-test('positions CRUD', async () => {
-  const server = await createTestServer();
-  try {
-    const token = await registerAndLogin(server.baseUrl);
+describe('positions CRUD', () => {
+  it('creates, lists, updates status and deletes a position', async () => {
+    const token = await registerAndLogin();
 
-    const created = await fetch(`${server.baseUrl}/positions`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
+    const created = await api
+      .post('/positions')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
         name: 'Frontend Developer',
         description: 'React e TypeScript',
         requirements: 'React, TS',
-      }),
-    });
+      });
 
-    assert.equal(created.status, 201);
-    const createdJson = await created.json();
-    const positionId = createdJson.data.id as string;
-    assert.equal(createdJson.data.status, 'applied');
+    expect(created.status).toBe(201);
+    expect(created.body.data.status).toBe('applied');
 
-    const list = await fetch(`${server.baseUrl}/positions`, {
-      headers: { authorization: `Bearer ${token}` },
-    });
-    assert.equal(list.status, 200);
-    const listJson = await list.json();
-    assert.equal(listJson.data.length, 1);
+    const positionId = created.body.data.id as string;
 
-    const statusUpdate = await fetch(`${server.baseUrl}/positions/${positionId}/status`, {
-      method: 'PATCH',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ status: 'interview' }),
-    });
-    assert.equal(statusUpdate.status, 200);
-    const statusUpdateJson = await statusUpdate.json();
-    assert.equal(statusUpdateJson.data.status, 'interview');
+    const list = await api.get('/positions').set('Authorization', `Bearer ${token}`);
+    expect(list.status).toBe(200);
+    expect(list.body.data).toHaveLength(1);
 
-    const deleted = await fetch(`${server.baseUrl}/positions/${positionId}`, {
-      method: 'DELETE',
-      headers: { authorization: `Bearer ${token}` },
-    });
-    assert.equal(deleted.status, 200);
-  } finally {
-    await server.close();
-  }
+    const updated = await api
+      .patch(`/positions/${positionId}/status`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ status: 'interview' });
+
+    expect(updated.status).toBe(200);
+    expect(updated.body.data.status).toBe('interview');
+
+    const deleted = await api.delete(`/positions/${positionId}`).set('Authorization', `Bearer ${token}`);
+    expect(deleted.status).toBe(200);
+  });
 });

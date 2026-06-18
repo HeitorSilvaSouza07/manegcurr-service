@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { UnauthorizedError } from '../shared/errors/unauthorized-error';
-import { verifyToken } from '../shared/utils/token';
 import type { JwtUser } from '../shared/types';
+import { verifyToken } from '../shared/utils/token';
 
 export function authMiddleware(req: Request, _res: Response, next: NextFunction): void {
   const header = req.headers.authorization;

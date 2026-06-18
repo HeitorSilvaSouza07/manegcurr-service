@@ -1,27 +1,13 @@
-import { AddressInfo } from 'node:net';
-import { createApp } from '../src/app';
-import { database } from '../src/config/database';
+import request from 'supertest';
+import { app } from '../src/app';
+import { prisma } from '../src/config/prisma';
 
-export async function createTestServer() {
-  await database.init();
-  await database.write({ users: [], cvs: [], positions: [] });
+export const api = request(app);
 
-  const app = createApp();
-  const server = app.listen(0);
-  await new Promise<void>((resolve) => server.once('listening', resolve));
-  const address = server.address() as AddressInfo;
-  const baseUrl = `http://127.0.0.1:${address.port}`;
-
-  return {
-    baseUrl,
-    server,
-    async reset() {
-      await database.write({ users: [], cvs: [], positions: [] });
-    },
-    async close() {
-      await new Promise<void>((resolve, reject) => {
-        server.close((error) => (error ? reject(error) : resolve()));
-      });
-    },
-  };
+export async function resetDatabase() {
+  await prisma.position.deleteMany();
+  await prisma.cv.deleteMany();
+  await prisma.user.deleteMany();
 }
+
+export { prisma };

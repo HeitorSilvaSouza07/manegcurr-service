@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { getValidatedBody, getValidatedParams } from '../../middlewares/validate.middleware';
+import { getValidatedBody, getValidatedParams, getValidatedQuery } from '../../middlewares/validate.middleware';
 import { sendSuccess } from '../../shared/utils/envelope';
 import type {
   CreatePositionInput,
@@ -18,7 +18,7 @@ export async function createPositionController(req: Request, res: Response): Pro
 }
 
 export async function listPositionsController(req: Request, res: Response): Promise<Response> {
-  const query = getValidatedBody<PositionsListQuery>(req);
+  const query = getValidatedQuery<PositionsListQuery>(req);
   const userId = req.user?.sub ?? '';
   const positions = await positionsService.list(userId, query.status);
   return sendSuccess(res, positions);

@@ -33,3 +33,4 @@ export type CreatePositionInput = z.infer<typeof createPositionSchema>;
 export type UpdatePositionInput = z.infer<typeof updatePositionSchema>;
 export type UpdatePositionStatusInput = z.infer<typeof updatePositionStatusSchema>;
 export type PositionPathParams = z.infer<typeof positionIdParamsSchema>;
+export type PositionsListQuery = z.infer<typeof positionsListQuerySchema>;

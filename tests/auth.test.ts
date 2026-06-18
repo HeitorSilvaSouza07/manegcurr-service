@@ -1,47 +1,29 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import { createTestServer } from './helpers';
+import { api } from './helpers';
 
-test('auth flow', async () => {
-  const server = await createTestServer();
-  try {
-    const register = await fetch(`${server.baseUrl}/auth/register`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        name: 'Maria',
-        email: 'maria@example.com',
-        password: 'password123',
-      }),
+describe('auth flow', () => {
+  it('registers, logs in and returns /users/me', async () => {
+    const register = await api.post('/auth/register').send({
+      name: 'Maria',
+      email: 'maria@example.com',
+      password: 'password123',
     });
 
-    assert.equal(register.status, 201);
-    const registerJson = await register.json();
-    assert.equal(registerJson.success, true);
-    assert.equal(registerJson.data.email, 'maria@example.com');
+    expect(register.status).toBe(201);
+    expect(register.body.success).toBe(true);
+    expect(register.body.data.email).toBe('maria@example.com');
 
-    const login = await fetch(`${server.baseUrl}/auth/login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        email: 'maria@example.com',
-        password: 'password123',
-      }),
+    const login = await api.post('/auth/login').send({
+      email: 'maria@example.com',
+      password: 'password123',
     });
 
-    assert.equal(login.status, 200);
-    const loginJson = await login.json();
-    assert.equal(loginJson.success, true);
-    assert.equal(typeof loginJson.data.token, 'string');
+    expect(login.status).toBe(200);
+    expect(login.body.success).toBe(true);
+    expect(typeof login.body.data.token).toBe('string');
 
-    const me = await fetch(`${server.baseUrl}/users/me`, {
-      headers: { authorization: `Bearer ${loginJson.data.token}` },
-    });
+    const me = await api.get('/users/me').set('Authorization', `Bearer ${login.body.data.token}`);
 
-    assert.equal(me.status, 200);
-    const meJson = await me.json();
-    assert.equal(meJson.data.email, 'maria@example.com');
-  } finally {
-    await server.close();
-  }
+    expect(me.status).toBe(200);
+    expect(me.body.data.email).toBe('maria@example.com');
+  });
 });
