@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PositionStatus {
+  applied
+  in_review
+  interview
+  rejected
+  approved
+
+  @@map("position_status")
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  name         String     @db.VarChar(120)
+  email        String     @unique @db.VarChar(160)
+  passwordHash String     @map("password_hash") @db.VarChar(255)
+  isAdmin      Boolean    @default(false) @map("is_admin")
+  cvs          Cv[]
+  positions    Position[]
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("users")
+}
+
+model Cv {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @map("user_id") @db.Uuid
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String     @db.VarChar(160)
+  documentPath String     @map("document_path") @db.VarChar(500)
+  positions    Position[]
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([userId], map: "idx_cvs_user_id")
+  @@map("cvs")
+}
+
+model Position {
+  id           String         @id @default(uuid()) @db.Uuid
+  userId       String         @map("user_id") @db.Uuid
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cvId         String?        @map("cv_id") @db.Uuid
+  cv           Cv?            @relation(fields: [cvId], references: [id], onDelete: SetNull)
+  name         String         @db.VarChar(160)
+  description  String?
+  requirements String?
+  status       PositionStatus @default(applied)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([userId], map: "idx_positions_user_id")
+  @@index([status], map: "idx_positions_status")
+  @@map("positions")
+}
