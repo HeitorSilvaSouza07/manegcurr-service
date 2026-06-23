@@ -18,7 +18,7 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
 
   try {
     const payload = verifyToken(token);
-    (req as Request & { user?: JwtUser }).user = payload;
+    req.user = payload;
     next();
   } catch {
     next(new UnauthorizedError('Token inválido ou expirado'));
