@@ -1,7 +1,7 @@
 {
   "name": "manegcurr-services",
   "version": "1.0.0",
-  "description": "",
+  "description": "JobTrack AI",
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -49,5 +49,8 @@
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
+  },
+  "directories": {
+    "test": "tests"
   }
 }
